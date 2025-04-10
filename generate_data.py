@@ -1,25 +1,31 @@
 import pandas as pd
 import numpy as np
+import os
 
+# Create synthetic sensor data for vibration, pressure, and temperature
 def generate_sensor_data(num_samples=1000):
-    np.random.seed(42)
-    time = np.arange(num_samples)
-    vibration = np.sin(0.02 * time) + np.random.normal(0, 0.1, size=num_samples)
-    temperature = 60 + 5 * np.sin(0.01 * time) + np.random.normal(0, 0.5, size=num_samples)
-    pressure = 30 + 2 * np.cos(0.015 * time) + np.random.normal(0, 0.3, size=num_samples)
-    
-    anomalies = np.random.choice(num_samples, size=int(0.05 * num_samples), replace=False)
-    vibration[anomalies] += np.random.normal(1, 0.5, size=anomalies.shape[0])
-    
+    time = pd.date_range(start="2023-01-01", periods=num_samples, freq="H")
+    vibration = np.random.normal(loc=0.5, scale=0.05, size=num_samples)
+    pressure = np.random.normal(loc=30, scale=3, size=num_samples)
+    temperature = np.random.normal(loc=70, scale=5, size=num_samples)
+
+    # Inject anomalies
+    for i in np.random.choice(num_samples, size=int(0.05*num_samples), replace=False):
+        vibration[i] += np.random.uniform(0.2, 0.5)
+        pressure[i] += np.random.uniform(10, 20)
+        temperature[i] += np.random.uniform(10, 15)
+
     df = pd.DataFrame({
-        "time": time,
+        "timestamp": time,
         "vibration": vibration,
-        "temperature": temperature,
-        "pressure": pressure
+        "pressure": pressure,
+        "temperature": temperature
     })
-    
-    df.to_csv("data/synthetic_sensor_data.csv", index=False)
-    print("Synthetic sensor data saved to 'data/synthetic_sensor_data.csv'.")
+
+    return df
 
 if __name__ == "__main__":
-    generate_sensor_data()
+    os.makedirs("data", exist_ok=True)
+    df = generate_sensor_data()
+    df.to_csv("data/synthetic_sensor_data.csv", index=False)
+    print("✅ Synthetic sensor data generated and saved to data/synthetic_sensor_data.csv")
